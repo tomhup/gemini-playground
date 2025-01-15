@@ -35,6 +35,17 @@ export class VideoRecorder {
         this.actualWidth = 640;
         this.actualHeight = 480;
         console.log(this.options);  
+        
+        // 移动端性能优化
+        if (this.isMobileDevice()) {
+            this.options.width = 320;
+            this.options.height = 240;
+            this.options.frameRate = 15;
+        }
+    }
+
+    isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
     /**
@@ -48,13 +59,23 @@ export class VideoRecorder {
             this.previewElement = previewElement;
             this.onVideoData = onVideoData;
 
+            // 移动端摄像头选择优化
+            const videoConstraints = {
+                facingMode: facingMode,
+                width: { ideal: this.options.width },
+                height: { ideal: this.options.height },
+                frameRate: { ideal: this.options.frameRate }
+            };
+
+            // 在移动设备上优先使用后置摄像头
+            if (this.isMobileDevice() && !facingMode) {
+                videoConstraints.facingMode = { ideal: 'environment' };
+            }
+
             // Request camera access
             this.stream = await navigator.mediaDevices.getUserMedia({ 
-                video: {
-                    facingMode: facingMode,
-                    width: { ideal: this.options.width },
-                    height: { ideal: this.options.height }
-                }
+                video: videoConstraints,
+                audio: false
             });
 
             const videoTrack = this.stream.getVideoTracks()[0];
@@ -87,9 +108,8 @@ export class VideoRecorder {
         } catch (error) {
             Logger.error('Failed to start video recording:', error);
             throw new ApplicationError(
-                'Failed to start video recording',
-                ErrorCodes.VIDEO_START_FAILED,
-                { originalError: error }
+                'Failed to start video recording: ' + error.message,
+                ErrorCodes.VIDEO_START_FAILED
             );
         }
     }

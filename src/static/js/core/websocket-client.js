@@ -18,14 +18,26 @@ export class MultimodalLiveClient extends EventEmitter {
      * @param {Object} options - Configuration options.
      * @param {string} [options.url] - The WebSocket URL for the Gemini API. Defaults to a URL constructed with the provided API key.
      */
-    constructor() {
+    constructor(options = {}) {
         super();
+        this.options = {
+            reconnectAttempts: 3,
+            reconnectDelay: 1000,
+            timeoutDuration: 10000,
+            ...options
+        };
+        
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         this.baseUrl  = `${wsProtocol}//${window.location.host}/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent`;
         this.ws = null;
         this.config = null;
         this.send = this.send.bind(this);
         this.toolManager = new ToolManager();
+
+        // 移动端网络状态监听
+        if ('connection' in navigator) {
+            navigator.connection.addEventListener('change', this.handleConnectionChange.bind(this));
+        }
     }
 
     /**
@@ -292,6 +304,32 @@ export class MultimodalLiveClient extends EventEmitter {
                     id: toolCall.functionCalls[0].id
                 }]
             });
+        }
+    }
+
+    handleConnectionChange() {
+        const connection = navigator.connection;
+        if (connection.type === 'cellular' || connection.saveData) {
+            // 降低数据使用量
+            this.adjustDataUsage(true);
+        } else {
+            this.adjustDataUsage(false);
+        }
+    }
+
+    adjustDataUsage(reduce) {
+        if (reduce) {
+            // 降低视频质量
+            if (this.videoQuality) {
+                this.videoQuality.width = 320;
+                this.videoQuality.height = 240;
+                this.videoQuality.frameRate = 10;
+            }
+            // 降低音频质量
+            if (this.audioQuality) {
+                this.audioQuality.sampleRate = 16000;
+                this.audioQuality.channels = 1;
+            }
         }
     }
 } 

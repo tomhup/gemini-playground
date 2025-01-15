@@ -611,3 +611,64 @@ body {
     color: #666;
     font-size: 12px;
 }
+
+/* 添加移动端响应式样式 */
+@media screen and (max-width: 768px) {
+  #app {
+    width: 95%;
+    padding: 10px;
+  }
+
+  /* 控制按钮组样式 */
+  .control-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 10px 0;
+  }
+
+  /* 输入框和发送按钮组合 */
+  .input-group {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+  }
+
+  /* 视频预览容器 */
+  #video-container,
+  #screen-container {
+    position: fixed;
+    bottom: 80px;
+    right: 10px;
+    width: 120px;
+    height: 160px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  /* 音频可视化器布局 */
+  .audio-visualizers {
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 8px 0;
+  }
+
+  /* 配置面板样式 */
+  #config-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.95);
+    z-index: 1000;
+    padding: 20px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+
+  #config-container.active {
+    transform: translateY(0);
+  }
+}

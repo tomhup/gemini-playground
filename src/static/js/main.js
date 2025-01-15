@@ -637,4 +637,130 @@ document.addEventListener('DOMContentLoaded', async () => {
     await initAudio();
     // ... 其他初始化代码 ...
 });
+
+// 添加触摸事件支持
+function addTouchSupport() {
+    // 音频录制的触摸支持
+    micButton.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        handleMicToggle();
+    });
+
+    // 视频预览拖动支持
+    let isDragging = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+    let xOffset = 0;
+    let yOffset = 0;
+
+    const videoContainer = document.getElementById('video-container');
+    
+    videoContainer.addEventListener('touchstart', dragStart);
+    videoContainer.addEventListener('touchend', dragEnd);
+    videoContainer.addEventListener('touchmove', drag);
+
+    function dragStart(e) {
+        initialX = e.touches[0].clientX - xOffset;
+        initialY = e.touches[0].clientY - yOffset;
+        isDragging = true;
+    }
+
+    function dragEnd(e) {
+        initialX = currentX;
+        initialY = currentY;
+        isDragging = false;
+    }
+
+    function drag(e) {
+        if (isDragging) {
+            e.preventDefault();
+            currentX = e.touches[0].clientX - initialX;
+            currentY = e.touches[0].clientY - initialY;
+            xOffset = currentX;
+            yOffset = currentY;
+            setTranslate(currentX, currentY, videoContainer);
+        }
+    }
+
+    function setTranslate(xPos, yPos, el) {
+        el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+    }
+}
+
+// 添加移动端手势支持
+function addGestureSupport() {
+    let touchStartY = 0;
+    const logsContainer = document.getElementById('logs-container');
+
+    logsContainer.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY;
+    });
+
+    logsContainer.addEventListener('touchmove', (e) => {
+        const touchY = e.touches[0].clientY;
+        const diff = touchStartY - touchY;
+        logsContainer.scrollTop += diff;
+        touchStartY = touchY;
+    });
+}
+
+// 添加性能优化相关代码
+function optimizeForMobile() {
+    // 检测设备性能
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        // 调整视频帧率
+        fpsInput.value = "10";
+        
+        // 降低音频采样率
+        CONFIG.AUDIO.SAMPLE_RATE = 16000;
+        CONFIG.AUDIO.BUFFER_SIZE = 1024;
+        
+        // 优化日志显示
+        const maxLogs = 50;
+        setInterval(() => {
+            const logs = logsContainer.children;
+            if (logs.length > maxLogs) {
+                for (let i = 0; i < logs.length - maxLogs; i++) {
+                    logs[0].remove();
+                }
+            }
+        }, 10000);
+    }
+}
+
+// 添加电池状态监控
+async function monitorBatteryStatus() {
+    if ('getBattery' in navigator) {
+        const battery = await navigator.getBattery();
+        
+        function handleBatteryChange() {
+            if (battery.level < 0.2 && !battery.charging) {
+                // 低电量模式
+                enablePowerSaving();
+            }
+        }
+        
+        battery.addEventListener('levelchange', handleBatteryChange);
+        battery.addEventListener('chargingchange', handleBatteryChange);
+    }
+}
+
+function enablePowerSaving() {
+    // 降低视频帧率
+    if (videoManager) {
+        videoManager.setFrameRate(5);
+    }
+    
+    // 降低音频采样率
+    if (audioRecorder) {
+        audioRecorder.setSampleRate(16000);
+    }
+    
+    // 减少UI更新频率
+    // ...
+}
   
