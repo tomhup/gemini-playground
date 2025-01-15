@@ -83,7 +83,83 @@ let screenRecorder = null;
 let isUsingTool = false;
 
 // Multimodal Client
-const client = new MultimodalLiveClient();
+const client = new MultimodalLiveClient({
+    onAudioData: (audioData) => {
+        const source = audioContext.createBufferSource();
+        source.buffer = audioData;
+        source.connect(gainNode);
+        source.start();
+    }
+});
+
+// 添加音量控制相关变量
+let audioContext;
+let gainNode;
+
+// 在初始化部分添加音量控制初始化
+async function initAudio() {
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        gainNode = audioContext.createGain();
+        gainNode.connect(audioContext.destination);
+        
+        // 设置初始音量
+        gainNode.gain.value = 1.0;
+        
+        // 添加音量键事件监听
+        document.addEventListener('keydown', handleVolumeKeys);
+        // 添加移动端音量变化事件监听
+        window.addEventListener('volumechange', handleVolumeChange);
+    } catch (error) {
+        Logger.error('Failed to initialize audio context:', error);
+    }
+}
+
+// 处理音量键事件
+function handleVolumeKeys(event) {
+    // 音量增加键
+    if (event.key === 'VolumeUp' || event.keyCode === 175) {
+        adjustVolume(0.1);
+    }
+    // 音量减小键
+    else if (event.key === 'VolumeDown' || event.keyCode === 174) {
+        adjustVolume(-0.1);
+    }
+}
+
+// 处理移动端音量变化事件
+function handleVolumeChange(event) {
+    // 获取系统音量级别（0-1之间）
+    const systemVolume = window.navigator.mediaSession?.volume || 1;
+    gainNode.gain.value = systemVolume;
+}
+
+// 调整音量的辅助函数
+function adjustVolume(delta) {
+    const newVolume = Math.max(0, Math.min(1, gainNode.gain.value + delta));
+    gainNode.gain.value = newVolume;
+    
+    // 添加音量变化的视觉反馈
+    showVolumeIndicator(newVolume);
+}
+
+function showVolumeIndicator(volume) {
+    // 创建或更新音量指示器
+    let volumeIndicator = document.getElementById('volume-indicator');
+    if (!volumeIndicator) {
+        volumeIndicator = document.createElement('div');
+        volumeIndicator.id = 'volume-indicator';
+        document.body.appendChild(volumeIndicator);
+    }
+    
+    volumeIndicator.textContent = `Volume: ${Math.round(volume * 100)}%`;
+    volumeIndicator.style.opacity = '1';
+    
+    // 2秒后隐藏指示器
+    setTimeout(() => {
+        volumeIndicator.style.opacity = '0';
+    }, 2000);
+}
 
 /**
  * Logs a message to the UI.
@@ -555,4 +631,10 @@ function stopScreenSharing() {
 
 screenButton.addEventListener('click', handleScreenShare);
 screenButton.disabled = true;
+
+// 在页面加载完成后初始化音频系统
+document.addEventListener('DOMContentLoaded', async () => {
+    await initAudio();
+    // ... 其他初始化代码 ...
+});
   

@@ -242,4 +242,23 @@ export class AudioStreamer {
             this.onComplete();
         }
     }
+
+    async playAudio(audioData) {
+        try {
+            const audioBuffer = this.createAudioBuffer(audioData);
+            const source = this.context.createBufferSource();
+            source.buffer = audioBuffer;
+            
+            if (this.gainNode) {
+                source.connect(this.gainNode);
+            } else {
+                source.connect(this.context.destination);
+            }
+            
+            source.start();
+        } catch (error) {
+            Logger.error('Error playing audio:', error);
+            throw new ApplicationError('Failed to play audio', ErrorCodes.AUDIO_PLAYBACK_FAILED);
+        }
+    }
 } 
