@@ -261,4 +261,16 @@ export class AudioStreamer {
             throw new ApplicationError('Failed to play audio', ErrorCodes.AUDIO_PLAYBACK_FAILED);
         }
     }
+
+    async setSinkId(deviceId) {
+        try {
+            if (this.audioElement && typeof this.audioElement.setSinkId === 'function') {
+                await this.audioElement.setSinkId(deviceId);
+                Logger.info('Audio output device set:', deviceId);
+            }
+        } catch (error) {
+            Logger.error('Error setting audio output device:', error);
+            throw error;
+        }
+    }
 } 

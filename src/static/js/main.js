@@ -36,6 +36,8 @@ const systemInstructionInput = document.getElementById('system-instruction');
 systemInstructionInput.value = CONFIG.SYSTEM_INSTRUCTION.TEXT;
 const applyConfigButton = document.getElementById('apply-config');
 const responseTypeSelect = document.getElementById('response-type-select');
+const audioInputSelect = document.getElementById('audio-input-select');
+const audioOutputSelect = document.getElementById('audio-output-select');
 
 // Load saved values from localStorage
 const savedApiKey = localStorage.getItem('gemini_api_key');
@@ -245,6 +247,63 @@ async function ensureAudioInitialized() {
     return audioStreamer;
 }
 
+// 初始化音频设备
+async function initAudioDevices() {
+    try {
+        // 获取设备列表权限
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // 获取所有音频设备
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        
+        // 清空现有选项
+        audioInputSelect.innerHTML = '';
+        audioOutputSelect.innerHTML = '';
+        
+        // 添加输入设备选项
+        devices.filter(device => device.kind === 'audioinput')
+            .forEach(device => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.text = device.label || `Microphone ${audioInputSelect.length + 1}`;
+                audioInputSelect.appendChild(option);
+            });
+            
+        // 添加输出设备选项
+        devices.filter(device => device.kind === 'audiooutput')
+            .forEach(device => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.text = device.label || `Speaker ${audioOutputSelect.length + 1}`;
+                audioOutputSelect.appendChild(option);
+            });
+            
+        // 保存选择到 localStorage
+        audioInputSelect.addEventListener('change', () => {
+            localStorage.setItem('preferred_audio_input', audioInputSelect.value);
+        });
+        
+        audioOutputSelect.addEventListener('change', () => {
+            localStorage.setItem('preferred_audio_output', audioOutputSelect.value);
+            // 更新当前音频输出设备
+            if (audioStreamer) {
+                audioStreamer.setSinkId(audioOutputSelect.value);
+            }
+        });
+        
+        // 加载保存的首选项
+        const savedInputId = localStorage.getItem('preferred_audio_input');
+        const savedOutputId = localStorage.getItem('preferred_audio_output');
+        
+        if (savedInputId) audioInputSelect.value = savedInputId;
+        if (savedOutputId) audioOutputSelect.value = savedOutputId;
+        
+    } catch (error) {
+        Logger.error('Error initializing audio devices:', error);
+        logMessage(`Error: ${error.message}`, 'system');
+    }
+}
+
 /**
  * Handles the microphone toggle. Starts or stops audio recording.
  * @returns {Promise<void>}
@@ -255,9 +314,24 @@ async function handleMicToggle() {
             await ensureAudioInitialized();
             audioRecorder = new AudioRecorder();
             
+            // 使用选定的输入设备
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    deviceId: audioInputSelect.value ? {exact: audioInputSelect.value} : undefined,
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            });
+            
             const inputAnalyser = audioCtx.createAnalyser();
             inputAnalyser.fftSize = 256;
             const inputDataArray = new Uint8Array(inputAnalyser.frequencyBinCount);
+            
+            // 确保使用选定的输出设备
+            if (audioStreamer) {
+                await audioStreamer.setSinkId(audioOutputSelect.value);
+            }
             
             await audioRecorder.start((base64Data) => {
                 if (isUsingTool) {
@@ -278,7 +352,6 @@ async function handleMicToggle() {
                 updateAudioVisualizer(inputVolume, true);
             });
 
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const source = audioCtx.createMediaStreamSource(stream);
             source.connect(inputAnalyser);
             
@@ -632,8 +705,14 @@ function stopScreenSharing() {
 screenButton.addEventListener('click', handleScreenShare);
 screenButton.disabled = true;
 
-// 在页面加载完成后初始化音频系统
+// 监听设备变化
+navigator.mediaDevices.addEventListener('devicechange', () => {
+    initAudioDevices();
+});
+
+// 在页面加载时初始化设备
 document.addEventListener('DOMContentLoaded', async () => {
+    await initAudioDevices();
     await initAudio();
     // ... 其他初始化代码 ...
 });
