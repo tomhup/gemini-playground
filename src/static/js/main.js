@@ -919,4 +919,19 @@ async function testAudioDevices() {
 
 // 添加测试按钮的事件监听
 document.getElementById('test-audio').addEventListener('click', testAudioDevices);
+
+// 添加日志展开/收起功能
+const logsToggle = document.getElementById('logs-toggle');
+const logsContainer = document.getElementById('logs-container');
+
+logsToggle.addEventListener('click', () => {
+    logsContainer.classList.toggle('collapsed');
+});
+
+// 点击日志容器外部时自动收起
+document.addEventListener('click', (e) => {
+    if (!logsContainer.contains(e.target) && !logsToggle.contains(e.target)) {
+        logsContainer.classList.add('collapsed');
+    }
+});
   
