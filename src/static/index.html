@@ -60,7 +60,6 @@
             </div>
         </div>
         <button id="connect-button">Connect</button>
-        <div id="logs-container"></div>
         <input type="text" id="message-input" placeholder="Enter message...">
         <button id="send-button">Send</button>
         <button id="mic-button">
@@ -94,6 +93,14 @@
             <video id="screen-preview" playsinline autoplay muted></video>
             <button class="close-button material-symbols-outlined">close</button>
         </div>
+        
+        <div class="logs-wrapper">
+            <button id="logs-toggle" class="ios-style-button">
+                <span class="material-symbols-outlined">history</span>
+            </button>
+            <div id="logs-container" class="collapsed"></div>
+        </div>
+
     </div>
     <script src="js/main.js" type="module"></script>
 </body>
