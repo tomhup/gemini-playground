@@ -644,8 +644,25 @@ function stopVideo() {
     logMessage('Camera stopped', 'system');
 }
 
-cameraButton.addEventListener('click', handleVideoToggle);
-stopVideoButton.addEventListener('click', stopVideo);
+cameraButton.addEventListener('click', async () => {
+    try {
+        await handleVideoToggle();
+    } catch (error) {
+        logMessage(`Camera error: ${error.message}`, 'system');
+        // Reset UI state
+        isVideoActive = false;
+        cameraIcon.textContent = 'videocam';
+        cameraButton.classList.remove('active');
+    }
+});
+
+stopVideoButton.addEventListener('click', async () => {
+    try {
+        await stopVideo();
+    } catch (error) {
+        logMessage(`Error stopping camera: ${error.message}`, 'system');
+    }
+});
 
 cameraButton.disabled = true;
 
@@ -842,4 +859,64 @@ function enablePowerSaving() {
     // 减少UI更新频率
     // ...
 }
+
+// 添加测试音频功能
+async function testAudioDevices() {
+    try {
+        // 1. 测试音频输出（播放一个测试音频）
+        const testAudioContext = new AudioContext();
+        const oscillator = testAudioContext.createOscillator();
+        const gainNode = testAudioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(testAudioContext.destination);
+        
+        // 设置音量较小
+        gainNode.gain.value = 0.1;
+        
+        // 播放一个短促的提示音
+        oscillator.start();
+        setTimeout(() => {
+            oscillator.stop();
+            testAudioContext.close();
+        }, 200);
+
+        // 2. 测试音频输入
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                deviceId: audioInputSelect.value ? {exact: audioInputSelect.value} : undefined
+            }
+        });
+        
+        // 创建音频分析器
+        const audioContext = new AudioContext();
+        const analyser = audioContext.createAnalyser();
+        const microphone = audioContext.createMediaStreamSource(stream);
+        microphone.connect(analyser);
+        
+        // 显示音频输入电平
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        
+        function updateMicLevel() {
+            analyser.getByteFrequencyData(dataArray);
+            const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+            const volume = average / 256;
+            updateAudioVisualizer(volume, true);
+            requestAnimationFrame(updateMicLevel);
+        }
+        
+        updateMicLevel();
+        
+        logMessage('Audio devices test started', 'system');
+        
+    } catch (error) {
+        logMessage(`Error testing audio devices: ${error.message}`, 'system');
+        console.error('Audio test error:', error);
+    }
+}
+
+// 添加测试按钮的事件监听
+document.getElementById('test-audio').addEventListener('click', testAudioDevices);
   

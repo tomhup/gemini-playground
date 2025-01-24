@@ -54,12 +54,18 @@ export class VideoRecorder {
      * @param {Function} onVideoData - Callback function to receive video frame data.
      * @throws {ApplicationError} Throws an error if the video recording fails to start.
      */
-    async start(previewElement, facingMode, onVideoData, ) {
+    async start(previewElement, facingMode, onVideoData) {
         try {
+            // Clean up any existing streams first
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.stop());
+                this.stream = null;
+            }
+            
             this.previewElement = previewElement;
             this.onVideoData = onVideoData;
 
-            // 移动端摄像头选择优化
+            // Mobile device camera selection optimization
             const videoConstraints = {
                 facingMode: facingMode,
                 width: { ideal: this.options.width },
@@ -67,16 +73,23 @@ export class VideoRecorder {
                 frameRate: { ideal: this.options.frameRate }
             };
 
-            // 在移动设备上优先使用后置摄像头
-            if (this.isMobileDevice() && !facingMode) {
-                videoConstraints.facingMode = { ideal: 'environment' };
+            // Request camera access with proper error handling
+            try {
+                this.stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: videoConstraints,
+                    audio: false
+                });
+            } catch (error) {
+                if (error.name === 'OverconstrainedError') {
+                    // Fallback to any available camera if constraints fail
+                    this.stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: true,
+                        audio: false
+                    });
+                } else {
+                    throw error;
+                }
             }
-
-            // Request camera access
-            this.stream = await navigator.mediaDevices.getUserMedia({ 
-                video: videoConstraints,
-                audio: false
-            });
 
             const videoTrack = this.stream.getVideoTracks()[0];
             // 获取视频轨道的实际分辨率

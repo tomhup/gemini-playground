@@ -240,12 +240,32 @@ export class VideoManager {
 
 
     async flipCamera() {
-
         try {
             Logger.info('Flipping camera');
-            this.facingMode = this.facingMode === 'user' ? 'environment' : 'user';         
-            this.stop();
-            await this.start(this.fps,this.onFrame);
+            
+            // Store current state
+            const wasActive = this.isActive;
+            
+            // Stop current stream properly
+            if (this.videoRecorder) {
+                this.videoRecorder.stop();
+                this.videoRecorder = null;
+            }
+            
+            // Clear video element's srcObject
+            if (this.previewVideo.srcObject) {
+                this.previewVideo.srcObject.getTracks().forEach(track => track.stop());
+                this.previewVideo.srcObject = null;
+            }
+            
+            // Toggle facing mode
+            this.facingMode = this.facingMode === 'user' ? 'environment' : 'user';
+            
+            // Only restart if it was active before
+            if (wasActive) {
+                await this.start(this.fps, this.onFrame);
+            }
+            
             Logger.info('Camera flipped successfully');
         } catch (error) {
             Logger.error('Error flipping camera:', error);
