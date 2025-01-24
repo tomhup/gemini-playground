@@ -175,14 +175,14 @@ body {
 
 #video-container {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 100%;
     max-width: 480px;
     z-index: 100;
     /* 确保在 iOS Safari 中正确显示 */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
+    -webkit-transform: translate(-50%, -50%);
 }
 
 #video-container video {
@@ -614,10 +614,12 @@ body {
     }
 
     #video-container {
-        bottom: env(safe-area-inset-bottom, 20px);
-        right: 50%;
-        transform: translateX(50%);
         width: 90%;
+        /* 保持居中定位 */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        -webkit-transform: translate(-50%, -50%);
     }
 
     #screen-container {
