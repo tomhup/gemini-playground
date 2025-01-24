@@ -177,14 +177,20 @@ body {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    width: 480px;
+    width: 100%;
+    max-width: 480px;
     z-index: 100;
+    /* 确保在 iOS Safari 中正确显示 */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
 #video-container video {
     width: 100%;
-    border-radius: 8px;
+    border-radius: 12px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    /* 适应 iOS 的安全区域 */
+    margin-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .video-controls {
@@ -192,6 +198,10 @@ body {
     top: 10px;
     right: 10px;
     z-index: 101;
+    /* 确保按钮容器不会溢出视频区域 */
+    padding: 8px;
+    display: flex;
+    justify-content: flex-end;
 }
 
 #stop-video {
@@ -208,12 +218,32 @@ body {
     background: #d33426;
 }
 
-#flip-camera {
+#flip-camera.ios-style-button {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
+    padding: 8px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    /* iOS 风格的触摸反馈 */
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+#flip-camera.ios-style-button:active {
+    transform: scale(0.95);
+    background: rgba(0, 0, 0, 0.6);
+}
+
+#flip-camera.ios-style-button span {
+    color: white;
+    font-size: 24px;
 }
 
 #camera-button {
@@ -580,10 +610,10 @@ body {
     }
 
     #video-container {
-        width: 60%;
-        max-height: 40vh;
-        bottom: 0;
-        right: 0;
+        bottom: env(safe-area-inset-bottom, 20px);
+        right: 50%;
+        transform: translateX(50%);
+        width: 90%;
     }
 
     #screen-container {
@@ -671,4 +701,18 @@ body {
   #config-container.active {
     transform: translateY(0);
   }
+}
+
+.test-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.test-button:hover {
+    background-color: #45a049;
 }
