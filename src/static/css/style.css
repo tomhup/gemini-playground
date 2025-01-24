@@ -196,12 +196,12 @@ body {
 .video-controls {
     position: absolute;
     top: 10px;
-    right: 10px;
+    left: 0;
+    right: 0;
     z-index: 101;
-    /* 确保按钮容器不会溢出视频区域 */
     padding: 8px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
 }
 
 #stop-video {
@@ -244,6 +244,10 @@ body {
 #flip-camera.ios-style-button span {
     color: white;
     font-size: 24px;
+}
+
+#flip-camera.ios-style-button.left-position {
+    margin-left: 10px;
 }
 
 #camera-button {
