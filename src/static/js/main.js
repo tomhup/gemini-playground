@@ -38,6 +38,7 @@ const applyConfigButton = document.getElementById('apply-config');
 const responseTypeSelect = document.getElementById('response-type-select');
 const audioInputSelect = document.getElementById('audio-input-select');
 const audioOutputSelect = document.getElementById('audio-output-select');
+const logsToggle = document.getElementById('logs-toggle');
 
 // Load saved values from localStorage
 const savedApiKey = localStorage.getItem('gemini_api_key');
@@ -921,9 +922,6 @@ async function testAudioDevices() {
 document.getElementById('test-audio').addEventListener('click', testAudioDevices);
 
 // 添加日志展开/收起功能
-const logsToggle = document.getElementById('logs-toggle');
-const logsContainer = document.getElementById('logs-container');
-
 logsToggle.addEventListener('click', () => {
     logsContainer.classList.toggle('collapsed');
 });
