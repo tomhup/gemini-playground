@@ -35,22 +35,65 @@ body {
     max-width: 1000px;
 }
 
-#logs-container {
-    border: 1px solid #ccc;
-    height: 300px;
-    overflow-y: auto;
-    margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s ease;
-    scroll-behavior: smooth;
+.logs-wrapper {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
 }
 
-#logs-container:hover {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+#logs-toggle {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    padding: 8px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+#logs-toggle:active {
+    transform: scale(0.95);
+}
+
+#logs-container {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    width: 300px;
+    max-height: 400px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 15px;
+    color: white;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#logs-container.collapsed {
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+}
+
+/* 适配移动设备 */
+@media (max-width: 768px) {
+    #logs-container {
+        width: 80vw;
+        max-height: 50vh;
+    }
 }
 
 .log-entry {

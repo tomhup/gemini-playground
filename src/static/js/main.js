@@ -634,15 +634,20 @@ async function handleVideoToggle() {
 /**
  * Stops the video streaming.
  */
-function stopVideo() {
-    if (videoManager) {
-        videoManager.stop();
-        videoManager = null;
+async function stopVideo() {
+    try {
+        if (videoManager) {
+            await videoManager.stop();
+            videoManager = null;
+        }
+        isVideoActive = false;
+        cameraIcon.textContent = 'videocam';
+        cameraButton.classList.remove('active');
+        logMessage('Camera stopped', 'system');
+    } catch (error) {
+        logMessage(`Error stopping camera: ${error.message}`, 'system');
+        throw error; // 保持错误冒泡
     }
-    isVideoActive = false;
-    cameraIcon.textContent = 'videocam';
-    cameraButton.classList.remove('active');
-    logMessage('Camera stopped', 'system');
 }
 
 cameraButton.addEventListener('click', async () => {

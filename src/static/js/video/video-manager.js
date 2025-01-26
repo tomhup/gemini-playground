@@ -211,31 +211,34 @@ export class VideoManager {
     /**
      * Stops video capture and processing
      */
-    stop() {
-        if (this.videoRecorder) {
-            this.videoRecorder.stop();
-            this.videoRecorder = null;
-        }
-        
-        // 清理视频流
-        if (this.previewVideo && this.previewVideo.srcObject) {
-            this.previewVideo.srcObject.getTracks().forEach(track => track.stop());
-            this.previewVideo.srcObject = null;
-        }
-        
-        // 清理canvas
-        if (this.framePreview) {
-            const ctx = this.framePreview.getContext('2d');
-            ctx.clearRect(0, 0, this.framePreview.width, this.framePreview.height);
-        }
-        
-        this.isActive = false;
-        this.videoContainer.style.display = 'none';
-        this.lastFrameData = null;
-        this.lastSignificantFrame = null;
-        this.frameCount = 0;
-        
-        Logger.info('Video manager stopped and resources released');
+    async stop() {
+        return new Promise(async (resolve) => {
+            if (this.videoRecorder) {
+                await this.videoRecorder.stop();
+                this.videoRecorder = null;
+            }
+            
+            // 清理视频流
+            if (this.previewVideo && this.previewVideo.srcObject) {
+                this.previewVideo.srcObject.getTracks().forEach(track => track.stop());
+                this.previewVideo.srcObject = null;
+            }
+            
+            // 清理canvas
+            if (this.framePreview) {
+                const ctx = this.framePreview.getContext('2d');
+                ctx.clearRect(0, 0, this.framePreview.width, this.framePreview.height);
+            }
+            
+            this.isActive = false;
+            this.videoContainer.style.display = 'none';
+            this.lastFrameData = null;
+            this.lastSignificantFrame = null;
+            this.frameCount = 0;
+            
+            Logger.info('Video manager stopped and resources released');
+            resolve();
+        });
     }
 
 
