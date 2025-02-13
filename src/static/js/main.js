@@ -121,20 +121,26 @@ async function initAudio() {
 // 处理音量键事件
 function handleVolumeKeys(event) {
     // 音量增加键
-    if (event.key === 'VolumeUp' || event.keyCode === 175) {
+    if (event.code === 'VolumeUp') {
         adjustVolume(0.1);
+        event.preventDefault();
     }
-    // 音量减小键
-    else if (event.key === 'VolumeDown' || event.keyCode === 174) {
+    else if (event.code === 'VolumeDown') {
+        adjustVolume(-0.1);
+        event.preventDefault();
         adjustVolume(-0.1);
     }
 }
 
 // 处理移动端音量变化事件
 function handleVolumeChange(event) {
-    // 获取系统音量级别（0-1之间）
-    const systemVolume = window.navigator.mediaSession?.volume || 1;
-    gainNode.gain.value = systemVolume;
+    // 兼容多浏览器处理
+    const volume = event.target?.volume ??
+                   window.navigator.mediaSession?.volume ??
+                   (event.detail?.volume / 100 || 1);
+    const clampedVolume = Math.min(1, Math.max(0, volume));
+    gainNode.gain.value = clampedVolume;
+    showVolumeIndicator(clampedVolume);
 }
 
 // 调整音量的辅助函数
@@ -309,6 +315,20 @@ async function initAudioDevices() {
  * Handles the microphone toggle. Starts or stops audio recording.
  * @returns {Promise<void>}
  */
+// 添加长按录音功能
+let longPressTimer;
+const LONG_PRESS_DURATION = 500; // 毫秒
+
+function startLongPress() {
+    longPressTimer = setTimeout(async () => {
+        await handleMicToggle();
+    }, LONG_PRESS_DURATION);
+}
+
+function cancelLongPress() {
+    clearTimeout(longPressTimer);
+}
+
 async function handleMicToggle() {
     if (!isRecording) {
         try {
@@ -393,8 +413,16 @@ async function resumeAudioContext() {
  * @returns {Promise<void>}
  */
 async function connectToWebsocket() {
-    if (!apiKeyInput.value) {
-        logMessage('Please input API Key', 'system');
+    const apiKey = apiKeyInput.value.trim();
+    if (!apiKey) {
+        apiKeyInput.parentElement.classList.add('error');
+        apiKeyInput.setAttribute('aria-invalid', 'true');
+        apiKeyInput.nextElementSibling.textContent = 'API密钥不能为空';
+        return;
+    } else if (!/^AIza[0-9A-Za-z-_]{35}$/.test(apiKey)) {
+        apiKeyInput.parentElement.classList.add('error');
+        apiKeyInput.setAttribute('aria-invalid', 'true');
+        apiKeyInput.nextElementSibling.textContent = '无效的API密钥格式';
         return;
     }
 
@@ -574,6 +602,17 @@ messageInput.addEventListener('keypress', (event) => {
     }
 });
 
+// 移动端触摸事件处理
+micButton.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    startLongPress();
+});
+micButton.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    cancelLongPress();
+});
+micButton.addEventListener('touchcancel', cancelLongPress);
+// 桌面端保持原有点击事件
 micButton.addEventListener('click', handleMicToggle);
 
 connectButton.addEventListener('click', () => {
@@ -679,8 +718,10 @@ cameraButton.disabled = true;
 async function handleScreenShare() {
     if (!isScreenSharing) {
         try {
-            screenContainer.style.display = 'block';
+            // 先检查浏览器是否支持屏幕共享
+            ScreenRecorder.checkBrowserSupport();
             
+            screenContainer.style.display = 'block';
             screenRecorder = new ScreenRecorder();
             await screenRecorder.start(screenPreview, (frameData) => {
                 if (isConnected) {
@@ -699,7 +740,13 @@ async function handleScreenShare() {
 
         } catch (error) {
             Logger.error('Screen sharing error:', error);
-            logMessage(`Error: ${error.message}`, 'system');
+            let errorMessage = error.message;
+            if (error.code === ErrorCodes.SCREEN_NOT_SUPPORTED) {
+                errorMessage = '您的浏览器不支持屏幕共享功能';
+            } else if (error.code === ErrorCodes.SCREEN_PERMISSION_DENIED) {
+                errorMessage = '屏幕共享权限被拒绝';
+            }
+            logMessage(`Error: ${errorMessage}`, 'system');
             isScreenSharing = false;
             screenIcon.textContent = 'screen_share';
             screenButton.classList.remove('active');

@@ -142,6 +142,42 @@ body {
     overflow: hidden;
 }
 
+/* 输入错误提示样式 */
+.input-group.error {
+    border: 2px solid #ff4444;
+    border-radius: 4px;
+    animation: shake 0.5s ease;
+    position: relative;
+    padding-right: 35px;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.error-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #ff4444;
+    display: none;
+}
+
+.error-message {
+    color: #ff4444;
+    font-size: 0.9em;
+    margin-top: 4px;
+    display: none;
+}
+
+.input-group.error .error-icon,
+.input-group.error .error-message {
+    display: block;
+}
+
 #send-button:hover, #mic-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);

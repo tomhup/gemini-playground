@@ -17,8 +17,12 @@
 <body>
     <div id="app">
         <div class="settings">
-            <input type="password" id="api-key" placeholder="Please Input Gemini API Key" />
-            <button id="config-toggle" class="material-symbols-outlined">settings</button>
+            <div class="input-group">
+                <input type="password" id="api-key" placeholder="Please Input Gemini API Key" aria-invalid="false"/>
+                <span class="error-icon material-symbols-outlined" aria-hidden="true">error</span>
+                <span class="error-message" aria-live="polite"></span>
+            </div>
+            <button id="config-toggle" class="material-symbols-outlined" aria-label="系统设置" aria-expanded="false">settings</button>
         </div>
         <div id="config-container" class="hidden-mobile">
             <div class="config-wrapper">
@@ -59,11 +63,11 @@
                 </div>
             </div>
         </div>
-        <button id="connect-button">Connect</button>
+        <button id="connect-button" aria-live="polite" aria-busy="false">Connect</button>
         <input type="text" id="message-input" placeholder="Enter message...">
         <button id="send-button">Send</button>
-        <button id="mic-button">
-            <span id="mic-icon" class="material-symbols-outlined">mic</span>
+        <button id="mic-button" aria-label="麦克风" aria-pressed="false">
+            <span id="mic-icon" class="material-symbols-outlined" role="img">mic</span>
         </button>
         <button id="camera-button">
             <span id="camera-icon" class="material-symbols-outlined">videocam</span>
