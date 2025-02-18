@@ -90,8 +90,31 @@ export class AudioRecorder {
                 this.stream = null;
             }
 
+            // Disconnect and clean up audio nodes
+            if (this.source) {
+                this.source.disconnect();
+                this.source = null;
+            }
+
+            if (this.processor) {
+                this.processor.disconnect();
+                this.processor.port.close();
+                this.processor = null;
+            }
+
+            if (this.audioContext && this.audioContext.state !== 'closed') {
+                this.audioContext.close()
+                    .then(() => {
+                        Logger.info('AudioContext closed successfully');
+                    })
+                    .catch(error => {
+                        Logger.error('Error closing AudioContext', error);
+                    });
+                this.audioContext = null;
+            }
+
             this.isRecording = false;
-            Logger.info('Audio recording stopped successfully');
+            Logger.info('Audio recording and resources cleaned up successfully');
         } catch (error) {
             Logger.error('Error stopping audio recording', error);
             throw new ApplicationError(
