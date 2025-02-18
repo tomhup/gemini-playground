@@ -795,15 +795,25 @@ async function handleScreenShare() {
  * Stops the screen sharing.
  */
 function stopScreenSharing() {
-    if (screenRecorder) {
-        screenRecorder.stop();
-        screenRecorder = null;
+    try {
+        if (screenRecorder) {
+            screenRecorder.stop();
+            screenRecorder = null;
+        }
+        isScreenSharing = false;
+        screenIcon.textContent = 'screen_share';
+        screenButton.classList.remove('active');
+        screenContainer.style.display = 'none';
+        logMessage('Screen sharing stopped', 'system');
+    } catch (error) {
+        Logger.error('Error stopping screen sharing:', error);
+        logMessage(`Error: ${error.message}`, 'system');
+        // Ensure UI state is reset even if an error occurs
+        isScreenSharing = false;
+        screenIcon.textContent = 'screen_share';
+        screenButton.classList.remove('active');
+        screenContainer.style.display = 'none';
     }
-    isScreenSharing = false;
-    screenIcon.textContent = 'screen_share';
-    screenButton.classList.remove('active');
-    screenContainer.style.display = 'none';
-    logMessage('Screen sharing stopped', 'system');
 }
 
 screenButton.addEventListener('click', handleScreenShare);

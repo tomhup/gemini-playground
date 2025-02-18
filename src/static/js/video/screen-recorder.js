@@ -158,19 +158,29 @@ export class ScreenRecorder {
                 clearInterval(this.captureInterval);
                 this.captureInterval = null;
             }
-
+    
             if (this.stream) {
-                this.stream.getTracks().forEach(track => track.stop());
+                this.stream.getTracks().forEach(track => {
+                    try {
+                        track.stop();
+                    } catch (trackError) {
+                        Logger.warn('Failed to stop track:', trackError);
+                    }
+                });
                 this.stream = null;
             }
-
+    
             if (this.previewElement) {
-                this.previewElement.srcObject = null;
+                try {
+                    this.previewElement.srcObject = null;
+                } catch (previewError) {
+                    Logger.warn('Failed to clear preview element source:', previewError);
+                }
                 this.previewElement = null;
             }
-
+    
             Logger.info('Screen recording stopped');
-
+    
         } catch (error) {
             Logger.error('Failed to stop screen recording:', error);
             throw new ApplicationError(
