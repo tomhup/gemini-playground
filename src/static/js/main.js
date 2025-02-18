@@ -602,18 +602,52 @@ messageInput.addEventListener('keypress', (event) => {
     }
 });
 
-// 移动端触摸事件处理
-micButton.addEventListener('touchstart', (e) => {
+// 统一的麦克风按钮事件处理
+function handleMicButtonEvent(e) {
     e.preventDefault();
-    startLongPress();
+    
+    // 阻止重复触发
+    if (isRecording) return;
+    
+    // 检查设备支持
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        logMessage('您的设备不支持音频录制功能', 'system');
+        return;
+    }
+    
+    // 开始录音
+    handleMicToggle();
+}
+
+// 移动端和桌面端统一事件处理
+micButton.addEventListener('touchstart', handleMicButtonEvent);
+micButton.addEventListener('click', handleMicButtonEvent);
+
+// 添加设备兼容性检测
+async function checkDeviceSupport() {
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter(device => device.kind === 'audioinput');
+        
+        if (audioInputs.length === 0) {
+            logMessage('未检测到可用的麦克风设备', 'system');
+            micButton.disabled = true;
+            return false;
+        }
+        
+        return true;
+    } catch (error) {
+        logMessage(`设备检测失败: ${error.message}`, 'system');
+        return false;
+    }
+}
+
+// 页面加载时检查设备支持
+document.addEventListener('DOMContentLoaded', async () => {
+    await initAudioDevices();
+    await initAudio();
+    await checkDeviceSupport();
 });
-micButton.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    cancelLongPress();
-});
-micButton.addEventListener('touchcancel', cancelLongPress);
-// 桌面端保持原有点击事件
-micButton.addEventListener('click', handleMicToggle);
 
 connectButton.addEventListener('click', () => {
     if (isConnected) {
