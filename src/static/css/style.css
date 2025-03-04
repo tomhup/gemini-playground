@@ -654,7 +654,9 @@ body {
 @media (max-width: 768px) {
     #app {
         padding: var(--spacing-sm);
-        width: 96%;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
     }
 
     .hidden-mobile {
@@ -668,12 +670,13 @@ body {
         right: 0;
         bottom: 0;
         z-index: 1000;
-        transform: translateX(100%);
+        transform: translateY(100%);
         transition: transform 0.3s ease;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         display: block;
         background: var(--surface-color);
-        padding: var(--spacing-lg);
+        padding: calc(var(--spacing-lg) + env(safe-area-inset-top)) var(--spacing-lg) calc(var(--spacing-lg) + env(safe-area-inset-bottom));
     }
 
     #config-container.active {
@@ -747,9 +750,18 @@ body {
   /* 控制按钮组样式 */
   .control-buttons {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    margin: 10px 0;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+    padding: 0 var(--spacing-sm);
+  }
+
+  .control-buttons button {
+    min-height: 44px;
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 8px;
+    touch-action: manipulation;
   }
 
   /* 输入框和发送按钮组合 */
@@ -762,15 +774,18 @@ body {
   /* 视频预览容器 */
   #video-container {
       position: fixed;
-      bottom: 20px;
+      bottom: calc(20px + env(safe-area-inset-bottom));
       right: 10px;
       width: 90%;
       max-width: 400px;
       height: auto;
       aspect-ratio: 16 / 9;
-      border-radius: 12px;
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 99;
   }
   
   #video-container video {
@@ -783,7 +798,23 @@ body {
   .audio-visualizers {
     flex-direction: row;
     justify-content: space-between;
-    margin: 8px 0;
+    margin: 16px 0;
+    padding: 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .visualizer-container {
+    flex: 1;
+    margin: 0 8px;
+  }
+
+  .visualizer-container label {
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: var(--text-secondary-color);
   }
 
   /* 配置面板样式 */

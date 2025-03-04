@@ -752,39 +752,31 @@ cameraButton.disabled = true;
 async function handleScreenShare() {
     if (!isScreenSharing) {
         try {
-            // 先检查浏览器是否支持屏幕共享
             ScreenRecorder.checkBrowserSupport();
-            
             screenContainer.style.display = 'block';
             screenRecorder = new ScreenRecorder();
             await screenRecorder.start(screenPreview, (frameData) => {
                 if (isConnected) {
-                    client.sendRealtimeInput([{
+                    client.sendRealtimeInput([{ 
                         mimeType: "image/jpeg",
-                        data: frameData
+                        data: frameData 
                     }]);
                 }
             });
-
             isScreenSharing = true;
             screenIcon.textContent = 'stop_screen_share';
             screenButton.classList.add('active');
-            Logger.info('Screen sharing started');
-            logMessage('Screen sharing started', 'system');
-
+            logMessage('屏幕共享已启动', 'system');
         } catch (error) {
-            Logger.error('Screen sharing error:', error);
+            Logger.error('屏幕共享错误:', error);
             let errorMessage = error.message;
-            if (error.code === ErrorCodes.SCREEN_NOT_SUPPORTED) {
-                errorMessage = '您的浏览器不支持屏幕共享功能';
-            } else if (error.code === ErrorCodes.SCREEN_PERMISSION_DENIED) {
+            if (error.code === 'SCREEN_NOT_SUPPORTED') {
+                errorMessage = '浏览器不支持屏幕共享';
+            } else if (error.code === 'SCREEN_PERMISSION_DENIED') {
                 errorMessage = '屏幕共享权限被拒绝';
             }
-            logMessage(`Error: ${errorMessage}`, 'system');
-            isScreenSharing = false;
-            screenIcon.textContent = 'screen_share';
-            screenButton.classList.remove('active');
-            screenContainer.style.display = 'none';
+            logMessage(`错误: ${errorMessage}`, 'system');
+            stopScreenSharing();
         }
     } else {
         stopScreenSharing();
@@ -795,28 +787,28 @@ async function handleScreenShare() {
  * Stops the screen sharing.
  */
 function stopScreenSharing() {
+    if (screenRecorder) {
+        screenRecorder.stop();
+        screenRecorder = null;
+    }
+    isScreenSharing = false;
+    screenIcon.textContent = 'screen_share';
+    screenButton.classList.remove('active');
+    screenContainer.style.display = 'none';
+    logMessage('屏幕共享已停止', 'system');
+}
+
+screenButton.addEventListener('click', async () => {
     try {
-        if (screenRecorder) {
-            screenRecorder.stop();
-            screenRecorder = null;
-        }
-        isScreenSharing = false;
-        screenIcon.textContent = 'screen_share';
-        screenButton.classList.remove('active');
-        screenContainer.style.display = 'none';
-        logMessage('Screen sharing stopped', 'system');
+        await handleScreenShare();
     } catch (error) {
-        Logger.error('Error stopping screen sharing:', error);
-        logMessage(`Error: ${error.message}`, 'system');
-        // Ensure UI state is reset even if an error occurs
+        logMessage(`屏幕共享错误: ${error.message}`, 'system');
         isScreenSharing = false;
         screenIcon.textContent = 'screen_share';
         screenButton.classList.remove('active');
         screenContainer.style.display = 'none';
     }
-}
-
-screenButton.addEventListener('click', handleScreenShare);
+});
 screenButton.disabled = true;
 
 // 监听设备变化
@@ -833,10 +825,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // 添加触摸事件支持
 function addTouchSupport() {
-    // 音频录制的触摸支持
+    // 音频录制的触摸支持 - 添加长按和点击支持
     micButton.addEventListener('touchstart', (e) => {
         e.preventDefault();
-        handleMicToggle();
+        startLongPress();
+    });
+    
+    micButton.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        cancelLongPress();
+    });
+    
+    // 为所有按钮添加触摸反馈
+    const allButtons = document.querySelectorAll('button');
+    allButtons.forEach(button => {
+        button.addEventListener('touchstart', () => {
+            button.style.transform = 'scale(0.95)';
+        });
+        button.addEventListener('touchend', () => {
+            button.style.transform = 'scale(1)';
+        });
     });
 
     // 视频预览拖动支持
