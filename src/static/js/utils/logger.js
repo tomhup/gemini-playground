@@ -29,6 +29,11 @@ export class Logger extends EventEmitter {
      * @param {Object} [data=null] - Optional data to include with the log.
      */
     static log(level, message, data = null) {
+        // Skip debug level logs
+        if (level === Logger.LEVELS.DEBUG) {
+            return;
+        }
+
         const logger = Logger.getInstance();
         const timestamp = new Date().toISOString();
         const logEntry = {
@@ -128,4 +133,4 @@ export class Logger extends EventEmitter {
     static error(message, data) {
         this.log(this.LEVELS.ERROR, message, data);
     }
-} 
+}
