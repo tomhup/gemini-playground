@@ -331,12 +331,13 @@ function cancelLongPress() {
 
 async function handleMicToggle() {
     if (!isRecording) {
+        let stream = null;
         try {
             await ensureAudioInitialized();
             audioRecorder = new AudioRecorder();
             
             // 使用选定的输入设备
-            const stream = await navigator.mediaDevices.getUserMedia({
+            stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     deviceId: audioInputSelect.value ? {exact: audioInputSelect.value} : undefined,
                     echoCancellation: true,
@@ -359,7 +360,7 @@ async function handleMicToggle() {
                     client.sendRealtimeInput([{
                         mimeType: "audio/pcm;rate=16000",
                         data: base64Data,
-                        interrupt: true     // Model isn't interruptable when using tools, so we do it manually
+                        interrupt: true
                     }]);
                 } else {
                     client.sendRealtimeInput([{
@@ -384,26 +385,32 @@ async function handleMicToggle() {
         } catch (error) {
             Logger.error('Microphone error:', error);
             logMessage(`Error: ${error.message}`, 'system');
+            // 确保在错误时释放资源
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            if (audioRecorder) {
+                audioRecorder.stop();
+                audioRecorder = null;
+            }
+            stream = null;
             isRecording = false;
             updateMicIcon();
         }
     } else {
         if (audioRecorder && isRecording) {
             audioRecorder.stop();
-            // 停止所有媒体流轨道
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-            stream = null;
             audioRecorder = null;
         }
+        // 获取当前的音频流并停止所有轨道
+        const tracks = audioCtx.getInputs?.[0]?.mediaStream?.getTracks() || [];
+        tracks.forEach(track => track.stop());
         isRecording = false;
         logMessage('Microphone stopped', 'system');
         updateMicIcon();
         updateAudioVisualizer(0, true);
     }
 }
-
 /**
  * Resumes the audio context if it's suspended.
  * @returns {Promise<void>}
