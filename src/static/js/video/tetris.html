@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>俄罗斯方块</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="300" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const gridSize = 30;
+        const cols = 10;
+        const rows = 20;
+
+        let board = Array.from({ length: rows }, () => Array(cols).fill(0));
+        let currentPiece = null;
+        let pieceX = 0;
+        let pieceY = 0;
+
+        const pieces = [
+            [[1, 1], [1, 1]],
+            [[1, 1, 1, 1]],
+            [[1, 1, 0], [0, 1, 1]],
+            [[0, 1, 1], [1, 1, 0]],
+            [[1, 1, 1], [0, 1, 0]],
+            [[0, 1, 0], [1, 1, 1]],
+            [[1, 1, 1], [1, 0, 0]],
+            [[1, 0, 0], [1, 1, 1]]
+        ];
+
+        function drawBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    if (board[row][col] === 1) {
+                        ctx.fillStyle = 'blue';
+                        ctx.fillRect(col * gridSize, row * gridSize, gridSize, gridSize);
+                    }
+                }
+            }
+        }
+
+        function drawPiece(piece, x, y) {
+            for (let row = 0; row < piece.length; row++) {
+                for (let col = 0; col < piece[row].length; col++) {
+                    if (piece[row][col] === 1) {
+                        ctx.fillStyle = 'red';
+                        ctx.fillRect((x + col) * gridSize, (y + row) * gridSize, gridSize, gridSize);
+                    }
+                }
+            }
+        }
+
+        function canMove(piece, x, y) {
+            for (let row = 0; row < piece.length; row++) {
+                for (let col = 0; col < piece[row].length; col++) {
+                    if (piece[row][col] === 1) {
+                        // 检查边界条件和碰撞
+                        if (x + col < 0 || x + col >= cols || y + row < 0 || y + row >= rows || board[y + row][x + col] === 1) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        function clearLines() {
+            for (let row = rows - 1; row >= 0; row--) {
+                if (board[row].every(cell => cell === 1)) {
+                    board.splice(row, 1);
+                    board.unshift(Array(cols).fill(0));
+                    row++; // 重新检查当前行
+                }
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (currentPiece) {
+                switch (event.key) {
+                    case 'ArrowLeft':
+                        if (canMove(currentPiece, pieceX - 1, pieceY)) {
+                            pieceX--;
+                        }
+                        break;
+                    case 'ArrowRight':
+                        if (canMove(currentPiece, pieceX + 1, pieceY)) {
+                            pieceX++;
+                        }
+                        break;
+                    case 'ArrowDown':
+                        if (canMove(currentPiece, pieceX, pieceY + 1)) {
+                            pieceY++;
+                        }
+                        break;
+                    case ' ':
+                        // 暂停游戏
+                        isPaused = !isPaused;
+                        if (isPaused) {
+                            alert('游戏已暂停，按确定继续');
+                        }
+                        break;
+                }
+            }
+        }
+
+        // 新增变量：控制游戏暂停状态
+        let isPaused = false;
+
+        // 新增变量：控制方块下落速度
+        let dropCounter = 0;
+        const dropInterval = 50; // 每50帧下落一次
+
+        function update() {
+            if (isPaused) {
+                requestAnimationFrame(update);
+                return;
+            }
+
+            // 更新计时器
+            dropCounter++;
+            if (dropCounter >= dropInterval) {
+                dropCounter = 0;
+
+                if (currentPiece && !canMove(currentPiece, pieceX, pieceY + 1)) {
+                    placePiece();
+                    clearLines();
+                    currentPiece = pieces[Math.floor(Math.random() * pieces.length)];
+                    pieceX = Math.floor((cols - currentPiece[0].length) / 2);
+                    pieceY = 0;
+                    if (!canMove(currentPiece, pieceX, pieceY)) {
+                        alert('Game Over!');
+                        board = Array.from({ length: rows }, () => Array(cols).fill(0));
+                        currentPiece = null;
+                    }
+                } else if (currentPiece) {
+                    pieceY++;
+                }
+            }
+
+            drawBoard();
+            if (currentPiece) {
+                drawPiece(currentPiece, pieceX, pieceY);
+            }
+            requestAnimationFrame(update);
+        }
+
+        document.addEventListener('keydown', handleKeyPress);
+
+        currentPiece = pieces[Math.floor(Math.random() * pieces.length)];
+        pieceX = Math.floor((cols - currentPiece[0].length) / 2);
+        pieceY = 0;
+        update();
+    </script>
+</body>
+</html>
