@@ -390,6 +390,12 @@ async function handleMicToggle() {
     } else {
         if (audioRecorder && isRecording) {
             audioRecorder.stop();
+            // 停止所有媒体流轨道
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            stream = null;
+            audioRecorder = null;
         }
         isRecording = false;
         logMessage('Microphone stopped', 'system');
