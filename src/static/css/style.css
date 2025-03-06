@@ -776,7 +776,7 @@ body {
 
   /* 视频预览容器 */
   #video-container {
-      position: fixed;
+      position: absolute;
       bottom: calc(20px + env(safe-area-inset-bottom));
       right: 10px;
       width: 90%;
@@ -789,6 +789,7 @@ body {
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       z-index: 99;
+      touch-action: none;
   }
   
   #video-container video {
