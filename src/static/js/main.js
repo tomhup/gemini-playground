@@ -860,46 +860,63 @@ function addTouchSupport() {
         });
     });
 
-    // 视频预览拖动支持
-    let isDragging = false;
-    let currentX;
-    let currentY;
-    let initialX;
-    let initialY;
-    let xOffset = 0;
-    let yOffset = 0;
+        // 初始化视频容器拖动功能
+    initVideoContainerDrag();
 
-    const videoContainer = document.getElementById('video-container');
-    
-    videoContainer.addEventListener('touchstart', dragStart);
-    videoContainer.addEventListener('touchend', dragEnd);
-    videoContainer.addEventListener('touchmove', drag);
+    function initVideoContainerDrag() {
+        const videoContainer = document.getElementById('video-container');
+        let isDragging = false;
+        let startX, startY, initialX, initialY;
 
-    function dragStart(e) {
-        initialX = e.touches[0].clientX - xOffset;
-        initialY = e.touches[0].clientY - yOffset;
-        isDragging = true;
-    }
+        // 触摸事件处理
+        videoContainer.addEventListener('touchstart', handleDragStart);
+        videoContainer.addEventListener('touchend', handleDragEnd);
+        videoContainer.addEventListener('touchmove', handleDragMove);
 
-    function dragEnd(e) {
-        initialX = currentX;
-        initialY = currentY;
-        isDragging = false;
-    }
+        // 鼠标事件处理
+        videoContainer.addEventListener('mousedown', handleMouseDown);
 
-    function drag(e) {
-        if (isDragging) {
-            e.preventDefault();
-            currentX = e.touches[0].clientX - initialX;
-            currentY = e.touches[0].clientY - initialY;
-            xOffset = currentX;
-            yOffset = currentY;
-            setTranslate(currentX, currentY, videoContainer);
+        function handleDragStart(e) {
+            isDragging = true;
+            initialX = e.touches[0].clientX - videoContainer.offsetLeft;
+            initialY = e.touches[0].clientY - videoContainer.offsetTop;
         }
-    }
 
-    function setTranslate(xPos, yPos, el) {
-        el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+        function handleMouseDown(e) {
+            isDragging = true;
+            startX = e.clientX - videoContainer.offsetLeft;
+            startY = e.clientY - videoContainer.offsetTop;
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }
+
+        function handleMouseMove(e) {
+            if (isDragging) {
+                const x = e.clientX - startX;
+                const y = e.clientY - startY;
+                videoContainer.style.left = `${x}px`;
+                videoContainer.style.top = `${y}px`;
+            }
+        }
+
+        function handleDragMove(e) {
+            if (isDragging) {
+                const x = e.touches[0].clientX - initialX;
+                const y = e.touches[0].clientY - initialY;
+                videoContainer.style.left = `${x}px`;
+                videoContainer.style.top = `${y}px`;
+            }
+        }
+
+        function handleDragEnd() {
+            isDragging = false;
+        }
+
+        function handleMouseUp() {
+            isDragging = false;
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        }
     }
 }
 
