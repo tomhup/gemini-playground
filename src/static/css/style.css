@@ -256,11 +256,11 @@ body {
 #video-container {
     position: absolute;
     top: var(--spacing-lg);
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    right: 0;
     width: calc(100% - var(--spacing-lg) * 2);
-    max-width: 480px;
-    margin: auto;
+     max-width: 480px;
+    margin: 0 auto;
     z-index: 100;
     /* iOS 安全区域支持 */
     padding: env(safe-area-inset-top, 0px)
